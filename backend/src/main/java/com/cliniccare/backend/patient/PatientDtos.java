@@ -13,5 +13,5 @@ public class PatientDtos {
                           @Size(max=20) String gender) {}
     public record Response(UUID id,String patientCode,String fullName,String mobile,String alternateContactNumber,
                            String address,LocalDate dateOfBirth,Integer age,String gender,
-                           LocalDate registrationDate) {}
+                           LocalDate registrationDate,boolean hasProfilePhoto) {}
 }

@@ -10,6 +10,7 @@ import AppointmentsPage from './pages/AppointmentsPage';
 import ConsultationsPage from './pages/ConsultationsPage';
 import PrescriptionsPage from './pages/PrescriptionsPage';
 import RemindersPage from './pages/RemindersPage';
+import WhatsAppInboxPage from './pages/WhatsAppInboxPage';
 import UsersPage from './pages/UsersPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -30,6 +31,7 @@ export default function App(){
    <Route path="/consultations" element={<ProtectedRoute roles={['DOCTOR']}><ConsultationsPage/></ProtectedRoute>}/>
    <Route path="/prescriptions" element={<ProtectedRoute roles={['DOCTOR']}><PrescriptionsPage/></ProtectedRoute>}/>
    <Route path="/reminders" element={<RemindersPage/>}/>
+   <Route path="/whatsapp/inbox" element={<WhatsAppInboxPage/>}/>
    <Route path="/users" element={<ProtectedRoute roles={['DOCTOR']}><UsersPage/></ProtectedRoute>}/>
    <Route path="/reports" element={<ReportsPage/>}/>
    <Route path="/settings" element={<SettingsPage/>}/>

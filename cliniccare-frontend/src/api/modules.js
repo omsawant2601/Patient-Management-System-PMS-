@@ -28,6 +28,23 @@ export const patientApi = {
   create: (payload) => api.post('/patients', payload),
   update: (id, payload) => api.put(`/patients/${id}`, payload),
   history: (id) => api.get(`/patients/${id}/history`),
+  photo: (id) => api.get(`/patients/${id}/photo`, { responseType: 'blob' }),
+  uploadPhoto: (id, file) => {
+    const body = new FormData();
+    body.append('photo', file);
+    return api.post(`/patients/${id}/photo`, body);
+  },
+  removePhoto: (id) => api.delete(`/patients/${id}/photo`),
+  gallery: (id) => api.get(`/patients/${id}/gallery`),
+  galleryImage: (id, comparisonId, side) => api.get(`/patients/${id}/gallery/${comparisonId}/${side}`, { responseType: 'blob' }),
+  addComparison: (id, before, after, caption) => {
+    const body = new FormData();
+    body.append('before', before);
+    body.append('after', after);
+    if (caption) body.append('caption', caption);
+    return api.post(`/patients/${id}/gallery`, body);
+  },
+  removeComparison: (id, comparisonId) => api.delete(`/patients/${id}/gallery/${comparisonId}`),
 };
 export const appointmentApi = {
   list: (params) => api.get('/appointments', { params }),
@@ -54,4 +71,7 @@ export const prescriptionApi = {
 export const reminderApi = {
   list: () => api.get('/reminders'),
   forAppointment: (id) => api.get(`/appointments/${id}/reminders`),
+};
+export const whatsappApi = {
+  inbox: (params) => api.get('/whatsapp/inbox', { params }),
 };

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CalendarDays, Stethoscope, Pill, BellRing, UserCog, ChartNoAxesCombined, Settings, LogOut, Menu, CircleUserRound } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, Stethoscope, Pill, BellRing, MessageSquareText, UserCog, ChartNoAxesCombined, Settings, LogOut, Menu, CircleUserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const titles = { '/dashboard':'Dashboard','/patients':'Patients','/appointments':'Appointments','/consultations':'Consultations','/prescriptions':'Prescriptions','/reminders':'WhatsApp Reminders','/users':'Users','/reports':'Reports','/settings':'Settings','/profile':'Profile' };
+const titles = { '/dashboard':'Dashboard','/patients':'Patients','/appointments':'Appointments','/consultations':'Consultations','/prescriptions':'Prescriptions','/reminders':'WhatsApp Reminders','/whatsapp/inbox':'WhatsApp Inbox','/users':'Users','/reports':'Reports','/settings':'Settings','/profile':'Profile' };
 export default function Layout() {
   const [open,setOpen]=useState(false);
   const {user,logout}=useAuth();
@@ -15,6 +15,7 @@ export default function Layout() {
     ['/appointments','Appointments',CalendarDays],
     ...(doctor?[['/consultations','Consultations',Stethoscope],['/prescriptions','Prescriptions',Pill]]:[]),
     ['/reminders','WhatsApp Reminders',BellRing],
+    ['/whatsapp/inbox','WhatsApp Inbox',MessageSquareText],
     ...(doctor?[['/users','Users',UserCog]]:[]),
     ['/reports','Reports',ChartNoAxesCombined],
     ['/settings','Settings',Settings],

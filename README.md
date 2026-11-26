@@ -1,47 +1,95 @@
-ClinicCare backend setup
-========================
+# ClinicCare
 
-See `backend/` for the Spring Boot backend.
+ClinicCare is a clinic management application with a Spring Boot API and a
+React web client.
 
-Environment variables
----------------------
+## Project layout
 
-- `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`
-- `JWT_SECRET` (at least 48 characters)
-- `JWT_ACCESS_MINUTES`, `JWT_REFRESH_DAYS`
-- `CLINICCARE_BOOTSTRAP_DOCTOR_USERNAME`, `CLINICCARE_BOOTSTRAP_DOCTOR_PASSWORD`
-- `CLINICCARE_MAIL_ENABLED`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`
-- `CLINICCARE_MAIL_FROM`, `FRONTEND_URL`
-- `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`
-- `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_GRAPH_VERSION`
-- `WHATSAPP_TEMPLATE_NAME`
+- `backend/` - Spring Boot REST API, database migrations, and backend tests.
+- `cliniccare-frontend/` - React/Vite web application.
+- `documentation/backend-configuration.md` - backend configuration and
+  integration reference.
 
-Run locally
------------
+## Requirements
+
+- Java 21 or later
+- PostgreSQL
+- Node.js and npm
+
+## Run locally
+
+Create a PostgreSQL database named `cliniccare`, then open PowerShell in the
+repository root. Set the database and application secrets in that terminal:
+
+```powershell
+$env:DATABASE_URL = "jdbc:postgresql://localhost:5432/cliniccare"
+$env:DATABASE_USERNAME = "postgres"
+$env:DATABASE_PASSWORD = "<your PostgreSQL password>"
+$env:JWT_SECRET = "<a random secret of at least 48 characters>"
+$env:CLINICCARE_BOOTSTRAP_DOCTOR_USERNAME = "<doctor username>"
+$env:CLINICCARE_BOOTSTRAP_DOCTOR_PASSWORD = "<strong doctor password>"
+```
+
+Replace the example values; do not commit real credentials. Start the backend:
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+Flyway applies pending database migrations at startup. The API listens on
+`http://localhost:8081` by default, with its API base at
+`http://localhost:8081/api/v1`.
+
+The health endpoint is `http://localhost:8081/api/v1/health`. For an Android
+emulator, use `http://10.0.2.2:8081/api/v1` as the API base URL.
+
+In another PowerShell terminal, configure and start the frontend:
+
+```powershell
+cd cliniccare-frontend
+npm install
+npm run dev
+```
+
+Set `VITE_API_BASE_URL=http://localhost:8081/api/v1` in
+`cliniccare-frontend/.env.development` and open `http://localhost:5173`.
+See [the frontend guide](cliniccare-frontend/README.md) for user-facing
+features and more setup notes.
+
+## API authorization
+
+Login, token refresh, and WhatsApp webhook endpoints are public. Other API
+routes require an `Authorization: Bearer ACCESS_TOKEN` header. Doctor-only
+routes require the `DOCTOR` role.
+
+For a separate Android client, store tokens using Android Keystore-backed
+storage, lock the app after inactivity, and reauthenticate with a PIN or
+biometric check. On `401`, refresh tokens and retry a request at most once.
+Download PDFs using authenticated requests and keep them in app-private
+storage.
+
+## Validation
+
+Run backend tests:
 
 ```powershell
 cd backend
 .\mvnw.cmd test
-.\mvnw.cmd spring-boot:run
 ```
 
-API base URL: `http://localhost:8081/api/v1`
-Android emulator URL: `http://10.0.2.2:8081/api/v1`
+Run frontend lint and production build:
 
-Authorization
--------------
+```powershell
+cd cliniccare-frontend
+npm run lint
+npm run build
+```
 
-Login, refresh, and webhook endpoints are public; other endpoints require
-`Authorization: Bearer ACCESS_TOKEN`. Doctor-only endpoints enforce the
-`DOCTOR` role. Clinic records are only visible to authenticated doctors or
-the permitted receptionist workflows.
+## Security
 
-Android integration
--------------------
-
-Store access and refresh tokens in EncryptedSharedPreferences or Android
-Keystore-backed storage. Lock the Compose app after inactivity, require
-PIN/biometric reauthentication, and reject pending refresh attempts after
-lock/logout. On `401`, call `/auth/refresh`, replace the access and refresh
-tokens, and retry once. Download PDFs with an authenticated `GET` and persist
-the returned PDF bytes only in app-private storage.
+Do not use the development defaults in production. Set strong secrets through
+the deployment environment, use HTTPS, restrict database access, and rotate
+any credential that has been exposed. Keep WhatsApp and mail provider tokens
+out of source control. Configure a public HTTPS callback URL before enabling
+Meta WhatsApp webhooks.

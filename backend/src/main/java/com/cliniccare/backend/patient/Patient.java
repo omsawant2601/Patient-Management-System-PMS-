@@ -17,6 +17,7 @@ public class Patient {
     private Integer age;
     private String gender;
     @Column(name="registration_date") private LocalDate registrationDate=LocalDate.now();
+    @Column(name="profile_photo_key") private String profilePhotoKey;
     @ManyToOne(fetch=FetchType.LAZY) @JoinColumn(name="created_by") private AppUser createdBy;
     @ManyToOne(fetch=FetchType.LAZY) @JoinColumn(name="updated_by") private AppUser updatedBy;
     @Column(name="created_at",nullable=false) private Instant createdAt=Instant.now();
@@ -31,6 +32,7 @@ public class Patient {
     public Integer getAge(){return age;} public void setAge(Integer v){age=v;}
     public String getGender(){return gender;} public void setGender(String v){gender=v;}
     public LocalDate getRegistrationDate(){return registrationDate;} public void setRegistrationDate(LocalDate v){registrationDate=v;}
+    public String getProfilePhotoKey(){return profilePhotoKey;} public void setProfilePhotoKey(String v){profilePhotoKey=v;}
     public AppUser getCreatedBy(){return createdBy;} public void setCreatedBy(AppUser v){createdBy=v;}
     public AppUser getUpdatedBy(){return updatedBy;} public void setUpdatedBy(AppUser v){updatedBy=v;}
     public Instant getCreatedAt(){return createdAt;} public void setCreatedAt(Instant v){createdAt=v;}

@@ -29,6 +29,9 @@ public class ReminderScheduler {
         Instant now=Instant.now();
         for(AppointmentReminder r:reminders.findByStatusInAndScheduledAtBefore(List.of("PENDING","FAILED"),now)){
             if(r.getNextAttemptAt()!=null&&r.getNextAttemptAt().isAfter(now))continue;
+            if(Set.of("CANCELLED","COMPLETED","NO_SHOW").contains(r.getAppointment().getStatus())){
+                r.setStatus("CANCELLED");continue;
+            }
             if(r.getAppointment().getScheduledAt().isBefore(now)){r.setStatus("CANCELLED");continue;}
             r.setStatus("PROCESSING");r.setLastAttemptAt(now);
             processOne(r);

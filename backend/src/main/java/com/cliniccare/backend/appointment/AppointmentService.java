@@ -24,14 +24,18 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentDtos.Response schedule(AppointmentDtos.Request r,AppUser actor){
-        Patient patient=patients.findById(r.patientId()).orElseThrow(() -> new NotFoundException("Patient not found"));
+        Patient patient=patients.findByIdForUpdate(r.patientId()).orElseThrow(() -> new NotFoundException("Patient not found"));
         AppUser doctor=users.findById(r.doctorId()).orElseThrow(() -> new NotFoundException("Doctor not found"));
         if(doctor.getRole()!=AppUser.Role.DOCTOR) throw new ConflictException("Selected user is not a doctor");
         Instant end=r.scheduledAt().plusSeconds(r.durationMinutes()*60L);
         if(!appointments.findOverlapping(doctor.getId(),r.scheduledAt(),end).isEmpty())
             throw new ConflictException("The doctor already has an appointment in this time range");
         Appointment a=new Appointment();
-        a.setAppointmentNumber("APT-"+System.currentTimeMillis());a.setPatient(patient);a.setDoctor(doctor);
+        long serial=appointments.countByPatientId(patient.getId())+1;
+        String number=PatientDocumentNumber.format("APT",patient,serial,false);
+        if(appointments.existsByAppointmentNumber(number))
+            number=PatientDocumentNumber.format("APT",patient,serial,true);
+        a.setAppointmentNumber(number);a.setPatient(patient);a.setDoctor(doctor);
         a.setScheduledAt(r.scheduledAt());a.setDurationMinutes(r.durationMinutes());
         a.setAppointmentType(r.appointmentType());a.setNotes(r.notes());a.setCreatedBy(actor);
         appointments.save(a); scheduleReminders(a); return toResponse(a);
@@ -57,14 +61,21 @@ public class AppointmentService {
     public AppointmentDtos.Response cancel(UUID id,AppUser actor){
         Appointment a=appointments.findById(id).orElseThrow(() -> new NotFoundException("Appointment not found"));
         a.setStatus("CANCELLED");a.setUpdatedAt(Instant.now());appointments.save(a);
-        reminders.findByAppointmentId(id).forEach(r->{if(!"SENT".equals(r.getStatus())&&! "DELIVERED".equals(r.getStatus())&&! "READ".equals(r.getStatus()))r.setStatus("CANCELLED");});
+        cancelPendingReminders(id);
         return toResponse(a);
     }
 
     @Transactional
     public AppointmentDtos.Response status(UUID id,AppointmentDtos.StatusRequest r,AppUser actor){
+        if(r.status()==AppointmentDtos.Status.CANCELLED)return cancel(id,actor);
         Appointment a=appointments.findById(id).orElseThrow(() -> new NotFoundException("Appointment not found"));
-        a.setStatus(r.status().name());a.setUpdatedAt(Instant.now());appointments.save(a);return toResponse(a);
+        if("CANCELLED".equals(a.getStatus()))
+            throw new ConflictException("Cancelled appointments cannot be reopened");
+        String previousStatus=a.getStatus();
+        a.setStatus(r.status().name());a.setUpdatedAt(Instant.now());appointments.save(a);
+        if(Set.of("COMPLETED","NO_SHOW").contains(a.getStatus()))cancelPendingReminders(id);
+        else if(Set.of("COMPLETED","NO_SHOW").contains(previousStatus))scheduleReminders(a);
+        return toResponse(a);
     }
 
     public AppointmentDtos.Response get(UUID id){return toResponse(appointments.findById(id).orElseThrow(() -> new NotFoundException("Appointment not found"))); }
@@ -86,10 +97,23 @@ public class AppointmentService {
     }
     private void createReminder(Appointment a,String type,Instant scheduled){
         var existing=reminders.findByAppointmentIdAndReminderType(a.getId(),type);
-        if(existing.isPresent())return;
+        if(existing.isPresent()){
+            AppointmentReminder reminder=existing.get();
+            if("CANCELLED".equals(reminder.getStatus())&&reminder.getSentAt()==null){
+                reminder.setScheduledAt(scheduled);reminder.setStatus("PENDING");
+                reminder.setErrorMessage(null);reminder.setNextAttemptAt(null);reminder.setLastAttemptAt(null);
+            }
+            return;
+        }
         AppointmentReminder r=new AppointmentReminder();
         r.setAppointment(a);r.setReminderType(type);r.setScheduledAt(scheduled);r.setStatus("PENDING");
         reminders.save(r);
+    }
+    private void cancelPendingReminders(UUID appointmentId){
+        reminders.findByAppointmentId(appointmentId).forEach(r->{
+            if(!"SENT".equals(r.getStatus())&&!"DELIVERED".equals(r.getStatus())&&!"READ".equals(r.getStatus()))
+                r.setStatus("CANCELLED");
+        });
     }
     private AppointmentDtos.Response toResponse(Appointment a){
         return new AppointmentDtos.Response(a.getId(),a.getAppointmentNumber(),a.getPatient().getId(),

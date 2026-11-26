@@ -31,7 +31,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh",
                         "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password",
                         "/api/v1/webhooks/whatsapp").permitAll()
-                .requestMatchers("/api/v1/users/**").hasRole("DOCTOR")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

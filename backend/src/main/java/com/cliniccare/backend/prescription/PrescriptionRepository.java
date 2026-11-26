@@ -6,4 +6,6 @@ import java.util.UUID;
 
 public interface PrescriptionRepository extends JpaRepository<Prescription,UUID> {
     List<Prescription> findByPatientIdOrderByPrescriptionDateDesc(UUID patientId);
+    long countByPatientId(UUID patientId);
+    boolean existsByPrescriptionNumber(String prescriptionNumber);
 }

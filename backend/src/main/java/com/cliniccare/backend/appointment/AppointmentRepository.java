@@ -17,5 +17,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment,UUID> {
     Page<Appointment> findByScheduledAtBetween(Instant start,Instant end,Pageable pageable);
     Page<Appointment> findByPatientId(UUID patientId,Pageable pageable);
     List<Appointment> findByPatientIdOrderByScheduledAtDesc(UUID patientId);
+    long countByPatientId(UUID patientId);
+    boolean existsByAppointmentNumber(String appointmentNumber);
     Page<Appointment> findByDoctorId(UUID doctorId,Pageable pageable);
 }

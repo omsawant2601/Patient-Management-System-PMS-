@@ -72,6 +72,6 @@ public class PatientService {
         updateAge(p);
         return new PatientDtos.Response(p.getId(),p.getPatientCode(),p.getFullName(),p.getMobile(),
                 p.getAlternateContactNumber(),p.getAddress(),p.getDateOfBirth(),p.getAge(),
-                p.getGender(),p.getRegistrationDate());
+                p.getGender(),p.getRegistrationDate(),p.getProfilePhotoKey()!=null);
     }
 }

@@ -3,6 +3,8 @@ package com.cliniccare.backend.prescription;
 import com.cliniccare.backend.common.*;
 import com.cliniccare.backend.consultation.MedicalRecordRepository;
 import com.cliniccare.backend.patient.PatientRepository;
+import com.cliniccare.backend.patient.Patient;
+import com.cliniccare.backend.patient.PatientDocumentNumber;
 import com.cliniccare.backend.user.AppUser;
 import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
@@ -32,9 +34,15 @@ public class PrescriptionService {
     public PrescriptionDtos.Response create(PrescriptionDtos.Request request,AppUser doctor){
         var record=records.findById(request.consultationId()).orElseThrow(() -> new NotFoundException("Consultation not found"));
         if(!record.getDoctor().getId().equals(doctor.getId())) throw new ForbiddenException("Only the treating doctor may prescribe");
+        Patient patient=patients.findByIdForUpdate(record.getPatient().getId())
+                .orElseThrow(() -> new NotFoundException("Patient not found"));
         Prescription p=new Prescription();
-        p.setPatient(record.getPatient()); p.setDoctor(doctor); p.setMedicalRecord(record);
-        p.setPrescriptionNumber("RX-"+System.currentTimeMillis()); p.setInstructions(request.instructions());
+        p.setPatient(patient); p.setDoctor(doctor); p.setMedicalRecord(record);
+        long serial=prescriptions.countByPatientId(patient.getId())+1;
+        String number=PatientDocumentNumber.format("RX",patient,serial,false);
+        if(prescriptions.existsByPrescriptionNumber(number))
+            number=PatientDocumentNumber.format("RX",patient,serial,true);
+        p.setPrescriptionNumber(number); p.setInstructions(request.instructions());
         p.setStatus("DRAFT");
         for(var m:request.medicines()){
             PrescriptionItem i=new PrescriptionItem();
