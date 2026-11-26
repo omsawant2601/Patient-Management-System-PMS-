@@ -47,6 +47,7 @@ public class ConsultationService {
     private ConsultationDtos.Response toResponse(MedicalRecord r){
         return new ConsultationDtos.Response(r.getId(),r.getPatient().getId(),r.getDoctor().getId(),
                 r.getAppointment()==null?null:r.getAppointment().getId(),r.getVisitDate(),r.getSymptoms(),
-                r.getDiagnosis(),r.getClinicalNotes(),r.getFollowUpRecommendations(),r.getStatus());
+                r.getDiagnosis(),r.getClinicalNotes(),r.getFollowUpRecommendations(),r.getStatus(),
+                r.getDoctor().getFullName());
     }
 }

@@ -16,5 +16,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment,UUID> {
     List<Appointment> findOverlapping(@Param("doctorId") UUID doctorId,@Param("start") Instant start,@Param("end") Instant end);
     Page<Appointment> findByScheduledAtBetween(Instant start,Instant end,Pageable pageable);
     Page<Appointment> findByPatientId(UUID patientId,Pageable pageable);
+    List<Appointment> findByPatientIdOrderByScheduledAtDesc(UUID patientId);
     Page<Appointment> findByDoctorId(UUID doctorId,Pageable pageable);
 }

@@ -105,6 +105,6 @@ public class PrescriptionService {
                 i.getFrequency(),i.getDuration(),i.getQuantity(),i.getInstructions())).toList();
         return new PrescriptionDtos.Response(p.getId(),p.getPrescriptionNumber(),p.getPatient().getId(),
                 p.getDoctor().getId(),p.getMedicalRecord().getId(),p.getPrescriptionDate(),
-                p.getInstructions(),p.getStatus(),medicines);
+                p.getInstructions(),p.getStatus(),medicines,p.getDoctor().getFullName());
     }
 }

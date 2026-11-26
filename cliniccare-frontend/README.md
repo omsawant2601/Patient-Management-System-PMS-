@@ -38,7 +38,7 @@ so Vite reads the updated API base URL.
 
 - Authentication: login, refresh, logout and change-password
 - Users: list, create, view, update and activate/deactivate
-- Patients: list, search, create, update, detail and history
+- Patients: list, search, create, update, detail and full profile history (appointments, consultations and prescriptions); patient registration numbers are assigned sequentially
 - Appointments: list, create, reschedule, cancel and status
 - Consultations: create, get, update and patient history
 - Prescriptions: create, update, finalize, history and PDF download

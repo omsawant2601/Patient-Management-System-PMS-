@@ -68,6 +68,9 @@ public class AppointmentService {
     }
 
     public AppointmentDtos.Response get(UUID id){return toResponse(appointments.findById(id).orElseThrow(() -> new NotFoundException("Appointment not found"))); }
+    public List<AppointmentDtos.Response> history(UUID patientId){
+        return appointments.findByPatientIdOrderByScheduledAtDesc(patientId).stream().map(this::toResponse).toList();
+    }
     public Page<AppointmentDtos.Response> list(int page,int size,UUID patientId,UUID doctorId,Instant from,Instant to){
         Pageable p=PageRequest.of(page,size,Sort.by("scheduledAt").ascending());
         Page<Appointment> result;
@@ -91,6 +94,6 @@ public class AppointmentService {
     private AppointmentDtos.Response toResponse(Appointment a){
         return new AppointmentDtos.Response(a.getId(),a.getAppointmentNumber(),a.getPatient().getId(),
                 a.getDoctor()==null?null:a.getDoctor().getId(),a.getScheduledAt(),a.getDurationMinutes(),
-                a.getAppointmentType(),a.getStatus(),a.getNotes());
+                a.getAppointmentType(),a.getStatus(),a.getNotes(),a.getDoctor()==null?null:a.getDoctor().getFullName());
     }
 }

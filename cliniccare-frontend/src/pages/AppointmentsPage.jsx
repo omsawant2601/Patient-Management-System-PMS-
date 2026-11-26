@@ -1,4 +1,5 @@
 import { useEffect,useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -10,9 +11,25 @@ import { apiError } from '../utils/errors';
 const schema=yup.object({patientId:yup.string().required('Patient is required'),doctorId:yup.string().required('Doctor is required'),scheduledAt:yup.string().required('Date and time are required'),durationMinutes:yup.number().min(5).max(240).required(),appointmentType:yup.string().required(),notes:yup.string().max(1000)});
 export default function AppointmentsPage(){
  const [rows,setRows]=useState([]),[patients,setPatients]=useState([]),[doctors,setDoctors]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[modal,setModal]=useState(false),[edit,setEdit]=useState(null);
+ const [searchParams,setSearchParams]=useSearchParams();
  const {register,handleSubmit,reset,formState:{errors,isSubmitting}}=useForm({resolver:yupResolver(schema)});
  const load=async()=>{setLoading(true);setError('');try{const [a,p,u]=await Promise.all([appointmentApi.list({page:0,size:100}),patientApi.list({page:0,size:100}),userApi.list().catch(()=>({data:{data:[]}}))]);setRows(a.data.data.content||[]);setPatients(p.data.data.content||[]);setDoctors(u.data.data.filter(x=>x.role==='DOCTOR'))}catch(e){setError(apiError(e))}finally{setLoading(false)}};
  useEffect(()=>{load()},[]);
+ useEffect(()=>{
+  const patientId=searchParams.get('patientId');
+  if(searchParams.get('action')!=='create'||!patientId)return;
+  const openForPatient=async()=>{
+   try{
+    const response=await patientApi.get(patientId);
+    setPatients(current=>current.some(patient=>patient.id===patientId)?current:[response.data.data,...current]);
+    setEdit(null);
+    reset({patientId,doctorId:'',scheduledAt:'',durationMinutes:15,appointmentType:'CONSULTATION',notes:''});
+    setModal(true);
+   }catch(e){setError(apiError(e))}
+  };
+  openForPatient();
+  setSearchParams({}, {replace:true});
+ },[searchParams,setSearchParams,reset]);
  const open=()=>{setEdit(null);reset({patientId:'',doctorId:'',scheduledAt:'',durationMinutes:15,appointmentType:'CONSULTATION',notes:''});setModal(true)};
  const openEdit=a=>{setEdit(a);reset({scheduledAt:a.scheduledAt?.slice(0,16),durationMinutes:a.durationMinutes,notes:a.notes||''});setModal(true)};
  const save=async v=>{setError('');try{if(edit){await appointmentApi.reschedule(edit.id,{scheduledAt:new Date(v.scheduledAt).toISOString(),durationMinutes:Number(v.durationMinutes),notes:v.notes});}else{await appointmentApi.create({...v,durationMinutes:Number(v.durationMinutes),scheduledAt:new Date(v.scheduledAt).toISOString()});}setModal(false);await load()}catch(e){setError(apiError(e))}};

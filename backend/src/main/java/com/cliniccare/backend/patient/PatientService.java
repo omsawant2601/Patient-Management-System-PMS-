@@ -20,7 +20,7 @@ public class PatientService {
         if(patients.findByMobile(request.mobile()).isPresent())
             throw new ConflictException("A patient is already registered with this mobile number");
         Patient p=new Patient();
-        p.setPatientCode(generateCode());
+        p.setPatientCode(Long.toString(patients.nextRegistrationNumber()));
         apply(p,request); p.setCreatedBy(actor); p.setUpdatedBy(actor);
         p.setRegistrationDate(LocalDate.now(ZoneId.of("Asia/Kolkata")));
         updateAge(p);
@@ -68,7 +68,6 @@ public class PatientService {
         if(p.getDateOfBirth()!=null) p.setAge(Period.between(p.getDateOfBirth(),
                 LocalDate.now(ZoneId.of("Asia/Kolkata"))).getYears());
     }
-    private String generateCode(){return "PT-"+System.currentTimeMillis();}
     public PatientDtos.Response toResponse(Patient p){
         updateAge(p);
         return new PatientDtos.Response(p.getId(),p.getPatientCode(),p.getFullName(),p.getMobile(),

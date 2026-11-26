@@ -1,4 +1,5 @@
 import { useEffect,useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, Download } from 'lucide-react';
 import { prescriptionApi,patientApi,consultationApi } from '../api/modules';
 import { Loading,ErrorState,Modal,Badge,EmptyState } from '../components/common';
@@ -8,6 +9,7 @@ const emptyMedicine={medicineName:'',dosage:'',frequency:'',duration:'',quantity
 export default function PrescriptionsPage(){
  const [patients,setPatients]=useState([]),[consultations,setConsultations]=useState([]),[rows,setRows]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[modal,setModal]=useState(false);
  const [patientId,setPatientId]=useState(''),[consultationId,setConsultationId]=useState(''),[instructions,setInstructions]=useState(''),[medicines,setMedicines]=useState([{...emptyMedicine}]);
+ const [searchParams,setSearchParams]=useSearchParams();
  useEffect(()=>{patientApi.list({page:0,size:100}).then(r=>setPatients(r.data.data.content||[])).catch(e=>setError(apiError(e))).finally(()=>setLoading(false))},[]);
  const choosePatient=async id=>{setPatientId(id);setRows([]);if(!id)return;try{setLoading(true);const [p,c]=await Promise.all([prescriptionApi.history(id),consultationApi.history(id)]);setRows(p.data.data||[]);setConsultations(c.data.data||[])}catch(e){setError(apiError(e))}finally{setLoading(false)}};
  const open=()=>{setConsultationId('');setInstructions('');setMedicines([{...emptyMedicine}]);setModal(true)};
@@ -15,11 +17,25 @@ export default function PrescriptionsPage(){
  const save=async()=>{if(!consultationId||medicines.some(m=>!m.medicineName.trim()))return setError('Select a consultation and enter every medicine name');try{await prescriptionApi.create({consultationId,instructions,medicines});setModal(false);await choosePatient(patientId)}catch(e){setError(apiError(e))}};
  const finalize=async r=>{if(!confirm(`Finalize prescription ${r.prescriptionNumber}? It cannot be silently edited afterward.`))return;try{await prescriptionApi.finalize(r.id);await choosePatient(patientId)}catch(e){setError(apiError(e))}};
  const download=async r=>{try{const response=await prescriptionApi.pdf(r.id);const url=URL.createObjectURL(response.data);const a=document.createElement('a');a.href=url;a.download=`prescription-${r.prescriptionNumber}.pdf`;a.click();URL.revokeObjectURL(url)}catch(e){setError(apiError(e))}};
+ useEffect(()=>{
+  const selectedPatient=searchParams.get('patientId');
+  if(searchParams.get('action')!=='create'||!selectedPatient)return;
+  const startCreate=async()=>{
+   try{
+    const response=await patientApi.get(selectedPatient);
+    setPatients(current=>current.some(patient=>patient.id===selectedPatient)?current:[response.data.data,...current]);
+    await choosePatient(selectedPatient);
+    setConsultationId('');setInstructions('');setMedicines([{...emptyMedicine}]);setModal(true);
+   }catch(e){setError(apiError(e))}
+  };
+  startCreate();
+  setSearchParams({}, {replace:true});
+ },[searchParams,setSearchParams]);
  return <><div className="toolbar"><h2 style={{margin:0}}>Prescriptions</h2><button className="btn btn-primary" onClick={open} disabled={!patientId}><Plus size={17}/> Create prescription</button></div>
  <div className="card" style={{marginBottom:16}}><label style={{fontWeight:700,display:'block',marginBottom:6}}>Select patient</label><select className="select" value={patientId} onChange={e=>choosePatient(e.target.value)}><option value="">Select patient</option>{patients.map(p=><option key={p.id} value={p.id}>{p.fullName} · {p.patientCode}</option>)}</select></div>
  {loading?<Loading/>:error?<ErrorState message={error}/>:<div className="card table-wrap">{rows.length?<table className="table"><thead><tr><th>Prescription</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>{r.prescriptionNumber}</td><td>{new Date(r.prescriptionDate).toLocaleString()}</td><td><Badge status={r.status}/></td><td><button className="btn btn-secondary" onClick={()=>download(r)} title="Download PDF"><Download size={15}/></button>{r.status==='DRAFT'&&<> <button className="btn btn-primary" onClick={()=>finalize(r)}>Finalize</button></>}</td></tr>)}</tbody></table>:<EmptyState/>}</div>}
  <Modal title="Create prescription" open={modal} onClose={()=>setModal(false)}><div className="form-grid">
- <div className="field full"><label>Consultation</label><select className="select" value={consultationId} onChange={e=>setConsultationId(e.target.value)}><option value="">Select consultation</option>{consultations.map(c=><option key={c.id} value={c.id}>{new Date(c.consultationDate).toLocaleString()} · {c.symptoms}</option>)}</select></div>
+ <div className="field full"><label>Consultation</label><select className="select" value={consultationId} onChange={e=>setConsultationId(e.target.value)}><option value="">Select consultation</option>{consultations.map(c=><option key={c.id} value={c.id}>{new Date(c.consultationDate).toLocaleString()} · {c.symptoms}</option>)}</select>{consultations.length===0&&<div className="error">Create a consultation for this patient before creating a prescription.</div>}</div>
  <div className="field full"><label>General instructions</label><textarea className="textarea" value={instructions} onChange={e=>setInstructions(e.target.value)}/></div></div>
  <h3>Medicines</h3>{medicines.map((m,i)=><div className="card" key={i} style={{marginBottom:10,padding:12}}><div className="form-grid">
  {Object.entries({medicineName:'Medicine name',dosage:'Dosage',frequency:'Frequency',duration:'Duration',quantity:'Quantity',instructions:'Instructions'}).map(([key,label])=><div className="field" key={key}><label>{label}</label><input className="input" value={m[key]} onChange={e=>updateMed(i,key,e.target.value)}/></div>)}

@@ -14,5 +14,5 @@ public class PrescriptionDtos {
                           @NotEmpty List<@Valid Medicine> medicines) {}
     public record Response(UUID id,String prescriptionNumber,UUID patientId,UUID doctorId,
                            UUID consultationId,Instant prescriptionDate,String instructions,
-                           String status,List<Medicine> medicines) {}
+                           String status,List<Medicine> medicines,String doctorName) {}
 }

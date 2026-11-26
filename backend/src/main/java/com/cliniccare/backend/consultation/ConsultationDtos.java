@@ -10,5 +10,5 @@ public class ConsultationDtos {
                           @Size(max=5000) String clinicalNotes, @Size(max=3000) String followUpRecommendations) {}
     public record Response(UUID id, UUID patientId, UUID doctorId, UUID appointmentId, Instant consultationDate,
                            String symptoms, String diagnosis, String clinicalNotes, String followUpRecommendations,
-                           String status) {}
+                           String status,String doctorName) {}
 }

@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import PatientsPage from './pages/PatientsPage';
+import PatientProfilePage from './pages/PatientProfilePage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import ConsultationsPage from './pages/ConsultationsPage';
 import PrescriptionsPage from './pages/PrescriptionsPage';
@@ -24,6 +25,7 @@ export default function App(){
   <Route element={<ProtectedRoute><Layout/></ProtectedRoute>}>
    <Route path="/dashboard" element={<DashboardPage/>}/>
    <Route path="/patients" element={<PatientsPage/>}/>
+   <Route path="/patients/:id" element={<PatientProfilePage/>}/>
    <Route path="/appointments" element={<AppointmentsPage/>}/>
    <Route path="/consultations" element={<ProtectedRoute roles={['DOCTOR']}><ConsultationsPage/></ProtectedRoute>}/>
    <Route path="/prescriptions" element={<ProtectedRoute roles={['DOCTOR']}><PrescriptionsPage/></ProtectedRoute>}/>

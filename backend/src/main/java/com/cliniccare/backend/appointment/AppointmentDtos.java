@@ -13,5 +13,5 @@ public class AppointmentDtos {
     public record StatusRequest(@NotNull Status status) {}
     public enum Status { SCHEDULED,CONFIRMED,COMPLETED,CANCELLED,NO_SHOW }
     public record Response(UUID id,String appointmentNumber,UUID patientId,UUID doctorId,Instant scheduledAt,
-                           int durationMinutes,String appointmentType,String status,String notes) {}
+                           int durationMinutes,String appointmentType,String status,String notes,String doctorName) {}
 }
