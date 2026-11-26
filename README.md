@@ -86,10 +86,4 @@ npm run lint
 npm run build
 ```
 
-## Security
 
-Do not use the development defaults in production. Set strong secrets through
-the deployment environment, use HTTPS, restrict database access, and rotate
-any credential that has been exposed. Keep WhatsApp and mail provider tokens
-out of source control. Configure a public HTTPS callback URL before enabling
-Meta WhatsApp webhooks.
